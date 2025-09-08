@@ -1,0 +1,178 @@
+--- FILE: index.html --- <!doctype html>
+
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LibreBox</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="desktop">
+    <div id="wallpaper"></div><!-- App windows container -->
+<div id="windows"></div>
+
+<!-- Start menu -->
+<div id="startMenu" class="hidden">
+  <div class="start-header">LibreBox</div>
+  <div class="start-apps">
+    <button class="start-app" data-app="apps/notes.html">Bloco de notas</button>
+    <button class="start-app" data-app="apps/calc.html">Calculadora</button>
+    <button class="start-app" data-app="apps/player.html">Player</button>
+    <button class="start-app" data-app="https://parsec.app/">Parsec (abrir)</button>
+  </div>
+</div>
+
+<!-- Taskbar -->
+<div id="taskbar">
+  <button id="startBtn">☰</button>
+  <div id="taskIcons"></div>
+  <div id="clock"></div>
+</div>
+
+  </div>  <script src="script.js"></script></body>
+</html>--- FILE: style.css --- :root{ --bg:#0b1220; --accent:#1db954; --panel: rgba(255,255,255,0.06); --glass: rgba(255,255,255,0.04); --text:#e6eef8; } {box-sizing:border-box;font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial} html,body,#desktop{height:100%;margin:0} #wallpaper{position:absolute;inset:0;background:linear-gradient(180deg,#071026 0%, #0b1220 60%), url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1600&q=60') center/cover no-repeat;filter:brightness(0.6)} #windows{position:relative;height:100%;pointer-events:none} .window{position:absolute;width:640px;height:360px;background:var(--panel);backdrop-filter: blur(6px);border-radius:8px;color:var(--text);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.6);pointer-events:auto} .window .titlebar{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;background:linear-gradient(90deg,transparent, rgba(255,255,255,0.02));cursor:grab} .window .content{padding:12px;height:calc(100% - 36px);background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent)} #taskbar{position:fixed;left:0;right:0;bottom:0;height:46px;background:var(--glass);display:flex;align-items:center;padding:0 8px;gap:8px} #startBtn{width:44px;height:36px;border-radius:6px;border:0;background:transparent;color:var(--text);font-size:18px} #taskIcons{display:flex;gap:6px;flex:1} .task-icon{height:32px;padding:6px 10px;border-radius:6px;background:transparent;border:0;color:var(--text);cursor:pointer} #clock{min-width:80px;text-align:right;color:var(--text)} #startMenu{position:fixed;left:8px;bottom:56px;width:280px;background:var(--panel);border-radius:10px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,0.6)} .hidden{display:none} .start-header{font-weight:700;margin-bottom:8px} .start-app{width:100%;padding:8px;border-radius:6px;border:0;background:transparent;color:var(--text);text-align:left;cursor:pointer} / Responsive smaller screens */ @media (max-width:900px){.window{width:90%;height:50%}}
+
+--- FILE: script.js --- const startBtn = document.getElementById('startBtn') const startMenu = document.getElementById('startMenu') const windowsContainer = document.getElementById('windows') const taskIcons = document.getElementById('taskIcons') const clockEl = document.getElementById('clock') let zIndex = 2
+
+startBtn.addEventListener('click', ()=> startMenu.classList.toggle('hidden'))
+
+// Clock function updateClock(){ const d = new Date() clockEl.textContent = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) } setInterval(updateClock,1000) updateClock()
+
+// Start menu app buttons document.querySelectorAll('.start-app').forEach(b=>{ b.addEventListener('click', ()=>{ const app = b.dataset.app openWindow(app, b.textContent.trim()) startMenu.classList.add('hidden') }) })
+
+function openWindow(url, title){ // Create window element const win = document.createElement('div') win.className = 'window' win.style.left = '80px' win.style.top = '80px' win.style.zIndex = ++zIndex
+
+// Titlebar const titlebar = document.createElement('div') titlebar.className = 'titlebar' titlebar.innerHTML = <div>${title}</div><div><button class=close>✕</button></div> win.appendChild(titlebar)
+
+// Content (iframe for apps or external URL) const content = document.createElement('div') content.className = 'content' const iframe = document.createElement('iframe') iframe.src = url iframe.style.width = '100%' iframe.style.height = '100%' iframe.style.border = '0' content.appendChild(iframe) win.appendChild(content)
+
+// Add to desktop windowsContainer.appendChild(win)
+
+// Add task icon const t = document.createElement('button') t.className = 'task-icon' t.textContent = title taskIcons.appendChild(t)
+
+// Close handler titlebar.querySelector('.close').addEventListener('click', ()=>{ win.remove(); t.remove() })
+
+// Focus on click win.addEventListener('mousedown', ()=>{ win.style.zIndex = ++zIndex })
+
+// Simple drag let isDown=false, startX, startY, startLeft, startTop titlebar.addEventListener('pointerdown', (e)=>{ isDown=true startX = e.clientX startY = e.clientY startLeft = parseInt(win.style.left) startTop = parseInt(win.style.top) titlebar.style.cursor='grabbing' }) window.addEventListener('pointermove', (e)=>{ if(!isDown) return const dx = e.clientX - startX const dy = e.clientY - startY win.style.left = (startLeft + dx) + 'px' win.style.top = (startTop + dy) + 'px' }) window.addEventListener('pointerup', ()=>{isDown=false;titlebar.style.cursor='grab'})
+
+// Task icon click: bring to front t.addEventListener('click', ()=>{ win.style.zIndex = ++zIndex }) }
+
+// Keyboard friendly: open notes with N, calc with C, toggle start with Meta/Windows window.addEventListener('keydown',(e)=>{ if(e.key==='Meta') startMenu.classList.toggle('hidden') if(e.key.toLowerCase()==='n') openWindow('apps/notes.html','Bloco de notas') if(e.key.toLowerCase()==='c') openWindow('apps/calc.html','Calculadora') })
+
+// Small helper: open default apps on first load for demo if(!localStorage.getItem('librebox-demo')){ localStorage.setItem('librebox-demo','1') openWindow('apps/notes.html','Bloco de notas') }
+
+--- FILE: apps/notes.html --- <!doctype html>
+
+<html>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bloco de notas - LibreBox</title>
+  <style>body{font-family:system-ui;padding:8px}textarea{width:100%;height:80vh}</style>
+</head>
+<body>
+  <h3>Bloco de notas</h3>
+  <textarea id="t"></textarea>
+  <script>
+    const t = document.getElementById('t')
+    const key = 'librebox-notes'
+    t.value = localStorage.getItem(key) || ''
+    t.addEventListener('input', ()=> localStorage.setItem(key,t.value))
+  </script>
+</body>
+</html>--- FILE: apps/calc.html --- <!doctype html>
+
+<html>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Calculadora - LibreBox</title>
+  <style>body{font-family:system-ui;padding:8px}input{width:100%;font-size:18px;padding:8px}</style>
+</head>
+<body>
+  <h3>Calculadora</h3>
+  <input id="e" placeholder="Digite expressão (ex: 2+2*3)" />
+  <div id="res"></div>
+  <script>
+    const e = document.getElementById('e')
+    const r = document.getElementById('res')
+    e.addEventListener('keydown', (ev)=>{
+      if(ev.key==='Enter'){
+        try{ r.textContent = eval(e.value) }
+        catch(err){ r.textContent = 'Erro' }
+      }
+    })
+  </script>
+</body>
+</html>--- FILE: apps/player.html --- <!doctype html>
+
+<html>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Player - LibreBox</title>
+  <style>body{font-family:system-ui;padding:8px}audio{width:100%}</style>
+</head>
+<body>
+  <h3>Player</h3>
+  <p>Carregue um arquivo de áudio do Xbox ou use uma URL.</p>
+  <input id="u" placeholder="URL de áudio (opcional)" style="width:100%" />
+  <audio id="a" controls></audio>
+  <script>
+    const a = document.getElementById('a')
+    const u = document.getElementById('u')
+    u.addEventListener('change', ()=>{ a.src = u.value })
+  </script>
+</body>
+</html>--- FILE: README.md ---
+
+LibreBox
+
+LibreBox é um protótipo de "desktop" web pensado para ser executado no navegador Microsoft Edge do Xbox (ou em qualquer navegador moderno). A ideia é transformar o Xbox em uma estação web, com apps integrados e suporte a streaming remoto.
+
+Estrutura
+
+index.html - Shell principal (barra de tarefas, start menu, janelas)
+
+style.css - Estilos
+
+script.js - Lógica do desktop e janelas
+
+apps/ - Mini-apps locais (notas, calculadora, player)
+
+
+Como publicar (GitHub Pages)
+
+1. Crie um repositório novo no GitHub chamado librebox.
+
+
+2. Faça git clone localmente e copie todos os arquivos para a raiz do repositório.
+
+
+3. git add . && git commit -m "Initial LibreBox prototype" && git push origin main
+
+
+4. No GitHub: Settings -> Pages -> Source -> Branch: main / Folder: / (root) -> Save.
+
+
+5. Após alguns minutos, sua página ficará disponível em https://SEUUSUARIO.github.io/librebox.
+
+
+
+Testando no Xbox
+
+Abra o browser Microsoft Edge no Xbox e acesse a URL do GitHub Pages.
+
+Use o direcional/controle para navegar: o shell funciona melhor com teclado/teclado virtual, mas é navegável com o controle.
+
+
+Próximos passos sugeridos
+
+Melhorar navegação com controle (mapeamento de botões, foco por D-pad).
+
+Adicionar cliente WebRTC para streaming remoto integrado (conectar ao PC).
+
+Empacotar como app UWP para rodar via Dev Mode no Xbox.
+
+
+--- END OF FILES ---
+
