@@ -14,10 +14,6 @@ O LibreBox será carregado com uma **barra de tarefas** e um **menu iniciar**:
 - Clique em **Bloco de Notas**, **Calculadora** ou **Player** para abrir os apps.  
 - Arraste as janelas com o mouse/teclado ou mova o cursor usando o controle.  
 
-*(Imagem ilustrativa aqui)*
-
----
-
 ### 4. Controles e navegação
 - **Controle do Xbox**: use o direcional ou o analógico para mover o cursor e o botão **A** para clicar.  
 - **Teclado/mouse USB ou Bluetooth**: funcionam normalmente no Xbox, oferecendo uma experiência de desktop mais prática.  
